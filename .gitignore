@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Env ###
+.env
+
+### Python ###
+__pycache__/
+*.pyc
