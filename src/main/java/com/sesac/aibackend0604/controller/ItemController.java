@@ -29,6 +29,9 @@ public class ItemController {
     @GetMapping("/{id}")
     public ItemResponse get(@PathVariable Long id) {
         Item item = storage.get(id);
+        if (item == null) {
+            throw NotFoundException.of("item", id);
+        }
         return ItemResponse.from(item);
     }
 
