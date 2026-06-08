@@ -41,19 +41,24 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    /**
-     * ChatLog → User 방향만 사용하는 단방향 연관관계.
-     *
-     * 현재는 User에서 ChatLog 목록을 조회할 요구사항이 없어
-     * 불필요한 양방향 매핑을 추가하지 않습니다.
-     *
-     * 향후 "특정 사용자의 모든 대화 내역 조회" 기능이 필요해지면
-     * 아래 @OneToMany 매핑을 활성화할 수 있습니다.
-     *
-     * 참고:
-     * - FK(외래키) 주인은 ChatLog의 @ManyToOne(user) 측입니다.
-     * - User 측은 조회 편의를 위한 역방향 매핑입니다.
-     */
+    /** 소셜 로그인 제공자 (ex. "GOOGLE"). 일반 회원은 null. */
+    @Column(length = 20)
+    private String provider;
+
+    /** 제공자가 발급한 불변 고유 ID (OIDC sub). 일반 회원은 null. */
+    @Column(length = 200)
+    private String providerId;
+
+    /** 구글 OAuth2 신규 가입 시 사용하는 팩토리 메서드. */
+    public static User oauthUser(String email, String providerId) {
+        return User.builder()
+                .username(email)
+                .role(Role.USER)
+                .provider("GOOGLE")
+                .providerId(providerId)
+                .build();
+    }
+
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<ChatLog> chatLogs = new ArrayList<>();
 }

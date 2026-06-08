@@ -7,6 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AiBackend0604Application {
 
 	public static void main(String[] args) {
+
+		System.out.println("GOOGLE_CLIENT_ID"+System.getenv("GOOGLE_CLIENT_ID"));
+
 		SpringApplication.run(AiBackend0604Application.class, args);
 	}
 
