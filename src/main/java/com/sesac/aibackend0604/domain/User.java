@@ -59,6 +59,16 @@ public class User {
                 .build();
     }
 
+    /**
+     * 역할 변경 도메인 메서드.
+     *
+     * Lombok @Setter를 두지 않고 의도된 메서드만 노출해 캡슐화를 유지합니다.
+     * 값 검증은 입력 경계에서 enum 타입(RoleUpdateRequest.role)으로 강제됩니다.
+     */
+    public void changeRole(Role role) {
+        this.role = role;
+    }
+
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<ChatLog> chatLogs = new ArrayList<>();
 }

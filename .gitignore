@@ -38,7 +38,7 @@ out/
 
 ### Env ###
 .env
-DataInitialize.java
+!**/DataInitialize.java
 
 ### Python ###
 __pycache__/

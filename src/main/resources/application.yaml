@@ -16,19 +16,13 @@ spring:
               - openid
               - email
               - profile
-          kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
-            scope:
-              - account_email
         provider: # ← 추가
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 jwt:
   secret: ${JWT_SECRET:please-change-this-to-a-32-byte-minimum-secret-key}
@@ -37,6 +31,9 @@ jwt:
 app:
   oauth2:
     redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth/callback}
+
+python:
+  base-url: ${PYTHON_BASE_URL}
 
 ---
 spring:
