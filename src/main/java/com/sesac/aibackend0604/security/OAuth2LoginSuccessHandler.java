@@ -44,7 +44,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // (provider, providerId)로 우리 DB 사용자를 조회하거나, 처음이면 신규 생성
         User user = userRepository.findByProviderAndProviderId("GOOGLE", providerId)
-                .orElseGet(() -> userRepository.save(User.oauthUser(email, providerId)));
+                .orElseGet(() -> userRepository.save(User.oauthUser(email, "GOOGLE", providerId)));
 
         // 폼 로그인과 동일한 방식으로 앱 자체 JWT 발급
         String token = jwtUtil.generate(user.getUsername(), user.getRole().name());

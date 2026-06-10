@@ -1,11 +1,9 @@
 package com.sesac.aibackend0604.security;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.startup.ContextRuleSet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +13,8 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -29,7 +29,8 @@ public class SecurityConfig {
     private final RestAccessDeniedHandler accessDeniedHandler;
     private final CorsConfigurationSource corsConfigurationSource; // ★
     private final JwtAuthenticationFilter jwtAuthFilter; // ★
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // ★
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // ★ Google
+    private final KakaoOAuth2LoginSuccessHandler kakaoLoginSuccessHandler; // ★ Kakao
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,10 +45,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 불필요. /error는 403 에러 포워드가 막혀 401로 덮이지 않도록 개방
                         .requestMatchers(
-                                "/login", "/signup", "/health",
+                                "/", "/login", "/signup", "/health",
                                 "/oauth2/**", "/login/oauth2/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-                                "/h2-console/**", "/error"
+                                "/h2-console/**", "/error", "/css/**", "/js/**", "/*.png"
                         ).permitAll()
                         // Day 2 인메모리 CRUD 학습용 (운영 권장 X)
                         .requestMatchers("/legacy/items/**").permitAll()
@@ -56,10 +57,25 @@ public class SecurityConfig {
                         // 그 외 모두 인증 필요 (Day 3 JPA CRUD, /chat 등)
                         .anyRequest().authenticated()
                 )
-                // 구글 OAuth2 로그인 — 성공 시 핸들러가 앱 JWT를 발급 (Day 4 B7/B8)
-                // 인가 시작: GET /oauth2/authorization/google, 콜백: /login/oauth2/code/google (자동)
-                // 처음엔 .oauth2Login(Customizer.withDefaults()) 이걸로 합니다. 핸들러는 다음 파트에서 진행됩니다.
-                .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler))
+                // OAuth2 로그인 — provider별 핸들러 분기 (Google: OIDC, Kakao: OAuth2)
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler((request, response, authentication) -> {
+                            OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
+                            String provider = token.getAuthorizedClientRegistrationId();
+                            if ("kakao".equals(provider)) {
+                                kakaoLoginSuccessHandler.onAuthenticationSuccess(request, response, authentication);
+                            } else {
+                                oAuth2LoginSuccessHandler.onAuthenticationSuccess(request, response, authentication);
+                            }
+                        })
+                        // 실패 시 HTML 리다이렉트 대신 JSON으로 응답
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    "{\"code\":\"UNAUTHORIZED\",\"message\":\"" + exception.getMessage() + "\"}"
+                            );
+                        }))
                 // H2 콘솔 사용을 위한 헤더 완화 (개발 프로파일만)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // ★

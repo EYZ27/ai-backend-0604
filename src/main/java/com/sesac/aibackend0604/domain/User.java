@@ -49,12 +49,12 @@ public class User {
     @Column(length = 200)
     private String providerId;
 
-    /** 구글 OAuth2 신규 가입 시 사용하는 팩토리 메서드. */
-    public static User oauthUser(String email, String providerId) {
+    /** 소셜 로그인(Google/Kakao 등) 신규 가입 시 사용하는 팩토리 메서드. */
+    public static User oauthUser(String username, String provider, String providerId) {
         return User.builder()
-                .username(email)
+                .username(username)
                 .role(Role.USER)
-                .provider("GOOGLE")
+                .provider(provider)
                 .providerId(providerId)
                 .build();
     }
